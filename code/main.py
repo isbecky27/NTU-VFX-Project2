@@ -1,8 +1,10 @@
+from cv2 import COLOR_BGR2GRAY
 import numpy as np
 import argparse
 import cv2
 import os
 import re
+from harris import *
 
 def read_imgs_and_focals(path, filename):
     '''
@@ -47,3 +49,5 @@ if __name__ == '__main__':
     ## read images and get the focal length of images
     print('Read images...')
     imgs, focals = read_imgs_and_focals(path, filename)
+    ## apply harris_corner_dector to get keypoints
+    keypoints, localmax_imgs = harris_corner_dector(imgs)
