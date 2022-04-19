@@ -6,10 +6,12 @@ import cv2
 # from gc import get_threshold
 # from sympy import det
 
+
+
 def output_img(img, name):
     cv2.imwrite(f'../myresult/{name}.png', img)
 
-def compute_R(img, ksize = 11, s = 5, k = 0.04):
+def compute_R(img, ksize = 11, s = 3, k = 0.04):
     '''
         compute R for each image
     '''
@@ -30,9 +32,8 @@ def compute_R(img, ksize = 11, s = 5, k = 0.04):
     
     return R
  
-def threshold_R(R, threshold = 0.03):
+def threshold_R(R, threshold = 0.04):
     R[R <= threshold * R.max()] = 0
-
     return R
 
 def find_local_maximum(R, k):
@@ -41,22 +42,35 @@ def find_local_maximum(R, k):
     '''
     h, w = R.shape
     
-    localmax_img = np.zeros((h, w), dtype=int)
+    localmax_img = np.zeros((h, w), dtype='uint8')
     localmax_pts = []
     
-    for i in range(0, h-(k-1)):
-        for j in range(0, w-(k-1)):
-            arr = R[i:i+k]
-            arr = np.array([arr[_][j:j+k] for _ in range(k)])
-            localmax = np.amax(arr)
-            if localmax < 10: # black
-                continue
-            x, y = np.where(arr == localmax)
-            maxi, maxj = i + x[len(x)//2], j + y[len(y)//2]
-            localmax_img[maxi][maxj] = 255
-            localmax_pts.append([maxi, maxj])
-
+    k = k//2
+    for i in range(k, h-k):
+        for j in range(k, w-k):
+            center = R[i][j]
+            ismax = True
+            for di in range(-k, k+1):
+                for dj in range(-k, k+1):
+                    if di == 0 and dj == 0:
+                        continue
+                    if R[i+di][j+dj] >= center:
+                        ismax = False
+                        break 
+            if ismax:
+                localmax_pts.append([i, j])
+                localmax_img[i][j] = 255
     return localmax_img, localmax_pts
+
+def draw_red_points(img, points):
+    red_img = copy.deepcopy(img)
+    for point in points:
+        cv2.circle(red_img, (point[1], point[0]), 2, (0, 0, 255), 3)
+    cv2.imshow('show key point', red_img)
+    cv2.waitKey(0)
+    return red_img
+        
+        
 
 def harris_corner_detector(imgs):
     '''
@@ -71,18 +85,25 @@ def harris_corner_detector(imgs):
             w: image width
     '''
     ## convert img to gray
+    ori = copy.deepcopy(imgs) # origin imgs
     imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) for img in imgs]
 
     keypoints, localmax_imgs = [], []
     for i in range(len(imgs)):
         R = compute_R(imgs[i])
         R = threshold_R(R)
+
         cv2.imshow('show R', R)
         cv2.waitKey(0)
 
-        localmax_img, localmax_points = find_local_maximum(R, 30) # wrong !
-        cv2.imshow('show local maximum', localmax_img.astype('uint8'))
+        localmax_img, localmax_points = find_local_maximum(R, 3) # wrong !
+        cv2.imshow('show local maximum', localmax_img)
         cv2.waitKey(0)
+        
+        red_img = draw_red_points(ori[i], localmax_points)
+        
+        
+
         # keypoints.append(localmax_points)
         # localmax_imgs.append(localmax_img)
     
