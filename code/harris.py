@@ -1,16 +1,15 @@
-from gc import get_threshold
-from cv2 import threshold
-from sympy import det
-from torch import tensor
-from main import *
-from scipy import signal as sig
+import numpy as np
 import copy
-from skimage.feature import peak_local_max
+import cv2
+# from skimage.feature import peak_local_max
+# from scipy import signal as sig
+# from gc import get_threshold
+# from sympy import det
 
 def output_img(img, name):
     cv2.imwrite(f'../myresult/{name}.png', img)
 
-def compute_R(img, ksize=3, s=3, k=0.04):
+def compute_R(img, ksize = 3, s = 3, k = 0.04):
     '''
         compute R for each image
     '''
@@ -21,16 +20,15 @@ def compute_R(img, ksize=3, s=3, k=0.04):
     Ix2, Iy2, Ixy = Ix ** 2, Iy ** 2, Ix * Iy
     Sx2, Sy2, Sxy = cv2.GaussianBlur(Ix2, (ksize, ksize), s), cv2.GaussianBlur(Iy2, (ksize, ksize), s), cv2.GaussianBlur(Ixy, (ksize, ksize), s)
     '''
-    M = [[Sx2, Sxy], 
-         [Sxy, Sy2]]
+        M = [[Sx2, Sxy], 
+            [S`xy, Sy2]]
     '''
     detM = (Sx2 * Sy2) - (Sxy ** 2)
     traceM = Sx2 + Sy2
     R = detM - k * traceM ** 2
+    
     return R
-
-                
-      
+ 
 def find_local_maximum(R, k):
     '''
         k: window size
@@ -53,11 +51,7 @@ def find_local_maximum(R, k):
 
     return localmax_img, localmax_pts
 
-    
-        
-                
-
-def harris_corner_dector(imgs):
+def harris_corner_detector(imgs):
     '''
         return: 
         1. keypoints: n x k x 2
@@ -72,8 +66,7 @@ def harris_corner_dector(imgs):
     ## convert img to gray
     imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) for img in imgs]
 
-    keypoints = []
-    localmax_imgs = []
+    keypoints, localmax_imgs = [], []
     for i in range(len(imgs)):
         R = compute_R(imgs[i])
         k = 80 # window size

@@ -49,5 +49,12 @@ if __name__ == '__main__':
     ## read images and get the focal length of images
     print('Read images...')
     imgs, focals = read_imgs_and_focals(path, filename)
-    ## apply harris_corner_dector to get keypoints
-    keypoints, localmax_imgs = harris_corner_dector(imgs)
+    
+    ## use Harris Corner Detector to get keypoints
+    keypoints, localmax_imgs = harris_corner_detector(imgs)
+    print('Feature detection...')
+
+    ## feature descriptor
+    ## feature matching
+    ## image matching
+    ## image blending
