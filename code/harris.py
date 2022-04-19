@@ -9,7 +9,7 @@ import cv2
 def output_img(img, name):
     cv2.imwrite(f'../myresult/{name}.png', img)
 
-def compute_R(img, ksize = 3, s = 3, k = 0.04):
+def compute_R(img, ksize = 11, s = 5, k = 0.04):
     '''
         compute R for each image
     '''
@@ -17,11 +17,12 @@ def compute_R(img, ksize = 3, s = 3, k = 0.04):
     # Ix, Iy =  cv2.Sobel(np.array(blur_img), cv2.CV_64F, 1, 0), cv2.Sobel(np.array(blur_img), cv2.CV_64F, 0, 1)
     # Ix, Iy =  cv2.Scharr(np.array(blur_img), cv2.CV_64F, 1, 0), cv2.Sobel(np.array(blur_img), cv2.CV_64F, 0, 1)
     Iy, Ix = np.gradient(blur_img)
+
     Ix2, Iy2, Ixy = Ix ** 2, Iy ** 2, Ix * Iy
     Sx2, Sy2, Sxy = cv2.GaussianBlur(Ix2, (ksize, ksize), s), cv2.GaussianBlur(Iy2, (ksize, ksize), s), cv2.GaussianBlur(Ixy, (ksize, ksize), s)
     '''
         M = [[Sx2, Sxy], 
-            [S`xy, Sy2]]
+             [Sxy, Sy2]]
     '''
     detM = (Sx2 * Sy2) - (Sxy ** 2)
     traceM = Sx2 + Sy2
@@ -29,11 +30,17 @@ def compute_R(img, ksize = 3, s = 3, k = 0.04):
     
     return R
  
+def threshold_R(R, threshold = 0.03):
+    R[R <= threshold * R.max()] = 0
+
+    return R
+
 def find_local_maximum(R, k):
     '''
         k: window size
     '''
     h, w = R.shape
+    
     localmax_img = np.zeros((h, w), dtype=int)
     localmax_pts = []
     
@@ -69,9 +76,17 @@ def harris_corner_detector(imgs):
     keypoints, localmax_imgs = [], []
     for i in range(len(imgs)):
         R = compute_R(imgs[i])
-        k = 80 # window size
-        localmax_img, localmax_points = find_local_maximum(R, k)
-        keypoints.append(localmax_points)
-        localmax_imgs.append(localmax_img)
+        R = threshold_R(R)
+        cv2.imshow('show R', R)
+        cv2.waitKey(0)
+
+        localmax_img, localmax_points = find_local_maximum(R, 30) # wrong !
+        cv2.imshow('show local maximum', localmax_img.astype('uint8'))
+        cv2.waitKey(0)
+        # keypoints.append(localmax_points)
+        # localmax_imgs.append(localmax_img)
     
     return keypoints, localmax_imgs
+
+img = cv2.imread('./cow.jpg')
+keypoints, localmax_imgs = harris_corner_detector([img])
