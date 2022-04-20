@@ -1,6 +1,7 @@
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import cv2
 
 def plot_matches(im1, im2, des1, des2, matches, i = 0):
@@ -21,21 +22,41 @@ def plot_matches(im1, im2, des1, des2, matches, i = 0):
     # plt.savefig('matches-%d.png' % i)
     plt.show()
 
-def feature_matching(v1, v2, thres=0.8):
+def feature_matching(kp1, kp2, des1, des2, threshold = 0.8):
 
-    distances = cdist(v1, v2)
-    sorted_index = np.argsort(distances, axis=1)
+    distances = cdist(des1, des2)
+    sorted_index = np.argsort(distances, axis = 1)
     
     matches = []
-    for i, si in enumerate(sorted_index):
-        first = distances[i, si[0]]
-        second = distances[i, si[1]]
-        if first / second < thres:
-            matches.append([i, si[0]])
-    
-    print('found matches:', len(matches))
-    return matches
+    for i, idx in enumerate(sorted_index):
+        first  = distances[i, idx[0]]
+        second = distances[i, idx[1]]
+        if first / second < threshold:
+            matches.append([i, idx[0]])
 
+    good_matches = RANSAC_matches(kp1, kp2, matches)
+
+    return good_matches
+
+def RANSAC_matches(kp1, kp2, matches, iteration = 10):
+
+    kp1, kp2, matches = np.array(kp1), np.array(kp2), np.array(matches) 
+    idx1, idx2 = matches[:, 0], matches[:, 1]
+
+    distances = np.linalg.norm(kp1[idx1] - kp2[idx2], axis = 1)
+
+    good_matches = []
+    for iter in range(iteration):
+        rand_dists = random.choices(distances, k = 5)
+        mean_dists = np.mean(rand_dists)
+        
+        matches_idx = np.where(abs(distances - mean_dists) <= 3)
+        
+        if len(matches_idx[0]) > len(good_matches):
+            good_matches = matches[matches_idx]
+    
+    return good_matches
+  
 # img0 = np.load('0_blur.npy')
 # img1 = np.load('1_blur.npy')
 # key0 = np.load('0_keypoint.npy')

@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
         ## feature matching
         print('Feature matching...')
-        matches = feature_matching(descriptors[idx], descriptors[idx+1])
+        matches = feature_matching(keypts[idx], keypts[idx+1], descriptors[idx], descriptors[idx+1])
         plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], matches)
         
         ## image matching
