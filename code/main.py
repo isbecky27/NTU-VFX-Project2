@@ -4,6 +4,8 @@ import argparse
 import cv2
 import os
 import re
+from feature_description import SIFT_descriptor
+from feature_matching import *
 from harris import *
 
 def read_imgs_and_focals(path, filename):
@@ -50,11 +52,31 @@ if __name__ == '__main__':
     print('Read images...')
     imgs, focals = read_imgs_and_focals(path, filename)
     
-    ## use Harris Corner Detector to get keypoints
-    keypoints, localmax_imgs = harris_corner_detector(imgs)
-    print('Feature detection...')
+    i = 0
+    keypts, descriptors = [], []
+    for img in imgs:
 
-    ## feature descriptor
-    ## feature matching
-    ## image matching
-    ## image blending
+        if i > 2: break
+        i += 1
+
+        ## use Harris Corner Detector to get keypoints
+        print('Feature detection...')
+        keypoints, blur_img = harris_corner_detector(img)
+
+        ## feature descriptor using SIFT
+        print('Feature descriptor...')
+        kp, des = SIFT_descriptor(blur_img, keypoints)
+        keypts.append(kp)
+        descriptors.append(des)
+        # np.save(f'{i}_keypoint.npy', keypts)
+        # np.save(f'{i}_descriptor.npy', descriptors)
+
+    for idx in range(2): # len(imgs)-1
+
+        ## feature matching
+        print('Feature matching...')
+        matches = feature_matching(descriptors[idx], descriptors[idx+1])
+        plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], matches)
+        
+        ## image matching
+        ## image blending

@@ -1,15 +1,7 @@
+from feature_description import SIFT_descriptor
 import numpy as np
 import copy
 import cv2
-# from skimage.feature import peak_local_max
-# from scipy import signal as sig
-# from gc import get_threshold
-# from sympy import det
-
-
-
-def output_img(img, name):
-    cv2.imwrite(f'../myresult/{name}.png', img)
 
 def compute_R(img, ksize = 11, s = 3, k = 0.04):
     '''
@@ -30,7 +22,7 @@ def compute_R(img, ksize = 11, s = 3, k = 0.04):
     traceM = Sx2 + Sy2
     R = detM - k * traceM ** 2
     
-    return R
+    return R, blur_img
  
 def threshold_R(R, threshold = 0.04):
     R[R <= threshold * R.max()] = 0
@@ -45,7 +37,7 @@ def find_local_maximum(R, k):
     localmax_img = np.zeros((h, w), dtype='uint8')
     localmax_pts = []
     
-    k = k//2
+    k = k // 2
     for i in range(k, h-k):
         for j in range(k, w-k):
             center = R[i][j]
@@ -60,19 +52,23 @@ def find_local_maximum(R, k):
             if ismax:
                 localmax_pts.append([i, j])
                 localmax_img[i][j] = 255
+
     return localmax_img, localmax_pts
 
 def draw_red_points(img, points):
-    red_img = copy.deepcopy(img)
-    for point in points:
-        cv2.circle(red_img, (point[1], point[0]), 2, (0, 0, 255), 3)
-    cv2.imshow('show key point', red_img)
-    cv2.waitKey(0)
-    return red_img
-        
-        
 
-def harris_corner_detector(imgs):
+    kp_img = copy.deepcopy(img)
+    for point in points:
+        cv2.circle(kp_img, (point[1], point[0]), 1, (0, 0, 255), 3)
+    cv2.imshow('show key points', kp_img)
+    cv2.waitKey(0)
+
+    return kp_img
+
+def output_img(img, name):
+    cv2.imwrite(f'../myresult/{name}.png', img)
+   
+def harris_corner_detector(img):
     '''
         return: 
         1. keypoints: n x k x 2
@@ -85,29 +81,25 @@ def harris_corner_detector(imgs):
             w: image width
     '''
     ## convert img to gray
-    ori = copy.deepcopy(imgs) # origin imgs
-    imgs = [cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) for img in imgs]
+    ori = copy.deepcopy(img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    keypoints, localmax_imgs = [], []
-    for i in range(len(imgs)):
-        R = compute_R(imgs[i])
-        R = threshold_R(R)
+    ## find corner response R
+    R, blur_img = compute_R(img)
+    R = threshold_R(R)
+    # cv2.imshow('show R', R)
+    # cv2.waitKey(0)
 
-        cv2.imshow('show R', R)
-        cv2.waitKey(0)
-
-        localmax_img, localmax_points = find_local_maximum(R, 3) # wrong !
-        cv2.imshow('show local maximum', localmax_img)
-        cv2.waitKey(0)
-        
-        red_img = draw_red_points(ori[i], localmax_points)
-        
-        
-
-        # keypoints.append(localmax_points)
-        # localmax_imgs.append(localmax_img)
+    ## find local maximum on R
+    localmax_img, localmax_points = find_local_maximum(R, 3)
+    # cv2.imshow('show local maximum', localmax_img)
+    # cv2.waitKey(0)
     
-    return keypoints, localmax_imgs
+    ## draw keypoint on the original image
+    # kp_img = draw_red_points(ori, localmax_points)
 
-img = cv2.imread('./cow.jpg')
-keypoints, localmax_imgs = harris_corner_detector([img])
+    return localmax_points, blur_img
+
+# img = cv2.imread('./cow.jpg')
+# keypoints, localmax_imgs = harris_corner_detector([img])
+
