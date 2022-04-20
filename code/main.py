@@ -1,12 +1,12 @@
-from cv2 import COLOR_BGR2GRAY
+from cylindrical_warping import *
+from feature_description import SIFT_descriptor
+from feature_matching import *
+from harris import *
 import numpy as np
 import argparse
 import cv2
 import os
 import re
-from feature_description import SIFT_descriptor
-from feature_matching import *
-from harris import *
 
 def read_imgs_and_focals(path, filename):
     '''
@@ -52,11 +52,9 @@ if __name__ == '__main__':
     print('Read images...')
     imgs, focals = read_imgs_and_focals(path, filename)
 
-    # cylindrical warping
+    ## cylindrical warping
     print('Cylindrical Warping...')
-    '''
-    TODO
-    '''
+    imgs = [cylindrical_warping(img, focal) for img, focal in zip(imgs, focals)]
 
     i = 0
     keypts, descriptors = [], []
@@ -86,14 +84,14 @@ if __name__ == '__main__':
         
         ## image matching
         print('Image matching...')
-        print(imgs[idx].shape)
         translation, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
-        # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
+        plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
 
         ## image blending
         '''
         TODO
         '''
+        print(translation)
         if idx == 0:
             output = np.hstack((imgs[idx+1][:, :int(translation)], imgs[idx]))
         else:
