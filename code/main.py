@@ -51,12 +51,18 @@ if __name__ == '__main__':
     ## read images and get the focal length of images
     print('Read images...')
     imgs, focals = read_imgs_and_focals(path, filename)
-    
+
+    # cylindrical warping
+    print('Cylindrical Warping...')
+    '''
+    TODO
+    '''
+
     i = 0
     keypts, descriptors = [], []
     for img in imgs:
 
-        if i > 2: break
+        if i > 4: break
         i += 1
 
         ## use Harris Corner Detector to get keypoints
@@ -71,12 +77,26 @@ if __name__ == '__main__':
         # np.save(f'{i}_keypoint.npy', keypts)
         # np.save(f'{i}_descriptor.npy', descriptors)
 
-    for idx in range(2): # len(imgs)-1
+    output = None
+    for idx in range(4): # len(imgs)-1
 
         ## feature matching
         print('Feature matching...')
-        matches = feature_matching(keypts[idx], keypts[idx+1], descriptors[idx], descriptors[idx+1])
-        plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], matches)
+        matches = feature_matching(descriptors[idx], descriptors[idx+1])
         
         ## image matching
+        print('Image matching...')
+        print(imgs[idx].shape)
+        translation, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
+        # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
+
         ## image blending
+        '''
+        TODO
+        '''
+        if idx == 0:
+            output = np.hstack((imgs[idx+1][:, :int(translation)], imgs[idx]))
+        else:
+            output = np.hstack((imgs[idx+1][:, :int(translation)], output))
+        cv2.imshow('show blending', output)
+        cv2.waitKey(0)

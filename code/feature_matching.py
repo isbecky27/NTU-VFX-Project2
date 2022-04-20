@@ -22,7 +22,7 @@ def plot_matches(im1, im2, des1, des2, matches, i = 0):
     # plt.savefig('matches-%d.png' % i)
     plt.show()
 
-def feature_matching(kp1, kp2, des1, des2, threshold = 0.8):
+def feature_matching(des1, des2, threshold = 0.8):
 
     distances = cdist(des1, des2)
     sorted_index = np.argsort(distances, axis = 1)
@@ -34,9 +34,7 @@ def feature_matching(kp1, kp2, des1, des2, threshold = 0.8):
         if first / second < threshold:
             matches.append([i, idx[0]])
 
-    good_matches = RANSAC_matches(kp1, kp2, matches)
-
-    return good_matches
+    return matches
 
 def RANSAC_matches(kp1, kp2, matches, iteration = 10):
 
@@ -45,17 +43,20 @@ def RANSAC_matches(kp1, kp2, matches, iteration = 10):
 
     distances = np.linalg.norm(kp1[idx1] - kp2[idx2], axis = 1)
 
-    good_matches = []
+    good_matches_idx = []
     for iter in range(iteration):
         rand_dists = random.choices(distances, k = 5)
         mean_dists = np.mean(rand_dists)
         
-        matches_idx = np.where(abs(distances - mean_dists) <= 3)
+        matches_idx = np.where(abs(distances - mean_dists) <= 3)[0]
         
-        if len(matches_idx[0]) > len(good_matches):
-            good_matches = matches[matches_idx]
+        if len(matches_idx) > len(good_matches_idx):
+            good_matches_idx = matches_idx
     
-    return good_matches
+    good_matches = matches[good_matches_idx]
+    best_translation = np.mean(distances[good_matches_idx])
+
+    return best_translation, good_matches
   
 # img0 = np.load('0_blur.npy')
 # img1 = np.load('1_blur.npy')
