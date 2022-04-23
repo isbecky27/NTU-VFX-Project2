@@ -5,16 +5,29 @@ import cv2
 def cylindrical_warping(img, f):
 
     h, w, c = img.shape
-    x0, y0 = w / 2, h / 2
+    x0, y0 = w / 2, h / 2 # center
 
     img_warp, s = np.zeros((img.shape)), f
-    x = np.array([i for i in range(w)])
-    y = np.array([i for i in range(h)])
-
     for y in range(h):
       for x in range(w):
         h = (y - y0) / math.sqrt((x - x0) ** 2 + f ** 2) * s
         theta = np.arctan((x - x0) / f)
         img_warp[round(y0 + h), round(x0 + s * theta), :] = img[y, x, :]
+    
+    pts = [[h/2, 0], [h/2, w-1]]
+    pts_warp = cylindrical_warping_pts(pts, f, h, w)
+    left, right = pts_warp[0][1], pts_warp[1][1]
+    
+    return img_warp.astype('uint8')[:, left:right+1]
 
-    return img_warp.astype('uint8')
+def cylindrical_warping_pts(pts, f, h, w):
+
+    x0, y0, s = w / 2, h / 2, f
+
+    pts_warp = []
+    for y, x in pts:
+        h = (y - y0) / math.sqrt((x - x0) ** 2 + f ** 2) * s
+        theta = np.arctan((x - x0) / f)
+        pts_warp.append([round(y0 + h), round(x0 + s * theta)])
+    
+    return pts_warp
