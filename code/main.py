@@ -1,6 +1,7 @@
 from cylindrical_warping import *
 from feature_description import SIFT_descriptor
 from feature_matching import *
+from image_blending import * 
 from harris import *
 import numpy as np
 import argparse
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         # np.save(f'{i}_descriptor.npy', descriptors)
 
     output = None
-    for idx in range(4): # len(imgs)-1
+    for idx in range(2): # len(imgs)-1
 
         ## feature matching
         print('Feature matching...')
@@ -91,10 +92,12 @@ if __name__ == '__main__':
         '''
         TODO
         '''
+        image_blending(imgs[idx], imgs[idx+1], translation)
         print(translation)
         if idx == 0:
             output = np.hstack((imgs[idx+1][:, :int(translation)], imgs[idx]))
         else:
             output = np.hstack((imgs[idx+1][:, :int(translation)], output))
-        cv2.imshow('show blending', output)
-        cv2.waitKey(0)
+        # cv2.imshow('show blending', output)
+        # cv2.waitKey(0)
+
