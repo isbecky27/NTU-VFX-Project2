@@ -59,9 +59,10 @@ if __name__ == '__main__':
 
     i = 0
     keypts, descriptors = [], []
-    for img in imgs:
+    # for img in imgs:
+    for img, focal in zip(imgs, focals):
 
-        if i > 4: break
+        if i > 3: break
         i += 1
 
         ## use Harris Corner Detector to get keypoints
@@ -77,27 +78,30 @@ if __name__ == '__main__':
         # np.save(f'{i}_descriptor.npy', descriptors)
 
     output = None
-    for idx in range(2): # len(imgs)-1
+    for idx in range(3): # len(imgs)-1
 
         ## feature matching
         print('Feature matching...')
         matches = feature_matching(descriptors[idx], descriptors[idx+1])
+
+        # img1 = cylindrical_warping(imgs[idx], focals[idx])
+        # img2 = cylindrical_warping(imgs[idx+1], focals[idx+1])
+        # k1 = cylindrical_warping_pts(keypts[idx], focals[idx], imgs[idx].shape[0], imgs[idx].shape[1])
+        # k2 = cylindrical_warping_pts(keypts[idx+1], focals[idx+1], imgs[idx].shape[0], imgs[idx].shape[1])
+        # plot_matches(img1, img2, k1, k2, matches)
         
         ## image matching
         print('Image matching...')
-        translation, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
-        plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
+        translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
+        # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
 
         ## image blending
         '''
         TODO
         '''
-        image_blending(imgs[idx], imgs[idx+1], translation)
-        print(translation)
         if idx == 0:
-            output = np.hstack((imgs[idx+1][:, :int(translation)], imgs[idx]))
+            output = np.hstack((imgs[idx+1][:, :int(translation_x)], imgs[idx]))
         else:
-            output = np.hstack((imgs[idx+1][:, :int(translation)], output))
-        # cv2.imshow('show blending', output)
-        # cv2.waitKey(0)
-
+            output = np.hstack((imgs[idx+1][:, :int(translation_x)], output))
+        cv2.imshow('show blending', output)
+        cv2.waitKey(0)

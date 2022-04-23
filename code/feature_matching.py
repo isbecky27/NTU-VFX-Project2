@@ -54,9 +54,12 @@ def RANSAC_matches(kp1, kp2, matches, iteration = 10):
             good_matches_idx = matches_idx
     
     good_matches = matches[good_matches_idx]
-    best_translation = np.mean(distances[good_matches_idx])
 
-    return best_translation, good_matches
+    translation = kp1[idx1] - kp2[idx2]
+    mean_translation = np.mean(translation[good_matches_idx], axis = 0)
+    translation_y, translation_x = mean_translation[0], mean_translation[1]
+
+    return abs(translation_x), abs(translation_y), good_matches
   
 # img0 = np.load('0_blur.npy')
 # img1 = np.load('1_blur.npy')
