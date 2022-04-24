@@ -1,9 +1,16 @@
 import numpy as np
 import cv2
-from sympy import false, half_gcdex
 
+def stack_img(img1, img2, x, y):
+    
+    output = np.hstack((np.zeros((img1.shape[0], x, 3)), img1))
 
+    if y < 0:
+        output[:y, :x, :] = img2[abs(y):, :x, :]
+    else:
+        output[y:, :x, :] = img2[:y*-1, :x, :]
 
+    return output.astype('uint8')
 
 def image_blending(src, tar, translation_x, translation_y, percent=0.2):
     th, tw, c = tar.shape

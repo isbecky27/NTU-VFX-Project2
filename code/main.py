@@ -62,8 +62,6 @@ if __name__ == '__main__':
     # for img in imgs:
     for img, focal in zip(imgs, focals):
 
-       
-
         ## use Harris Corner Detector to get keypoints
         print('Feature detection...')
         keypoints, blur_img = harris_corner_detector(img)
@@ -76,7 +74,7 @@ if __name__ == '__main__':
         # np.save(f'{i}_keypoint.npy', keypts)
         # np.save(f'{i}_descriptor.npy', descriptors)
 
-    output = None
+    output, accu_y = None, 0
     for idx in range(len(imgs)-1): # len(imgs)-1
 
         ## feature matching
@@ -92,6 +90,7 @@ if __name__ == '__main__':
         ## image matching
         print('Image matching...')
         translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
+        accu_y += translation_y
         # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
 
         ## image blending
@@ -99,9 +98,13 @@ if __name__ == '__main__':
         TODO
         '''
         if idx == 0:
-            output = image_blending(imgs[idx], imgs[idx+1], translation_x, translation_y)
+            output = image_blending(imgs[idx], imgs[idx+1], translation_x, accu_y)
         else:
-            output = image_blending(output, imgs[idx+1], translation_x, translation_y)
+            output = image_blending(output, imgs[idx+1], translation_x, accu_y)
       
         cv2.imshow('show blending', output)
         cv2.waitKey(0)
+
+    # cv2.imwrite(save_path + 'stack.png', output[10:output.shape[0]-15])
+    cv2.imshow('Result', output[10:output.shape[0]-15])
+    cv2.waitKey(0)
