@@ -74,7 +74,7 @@ if __name__ == '__main__':
         # np.save(f'{i}_keypoint.npy', keypts)
         # np.save(f'{i}_descriptor.npy', descriptors)
 
-    output = None
+    output, accu_y = None, 0
     for idx in range(len(imgs)-1): # len(imgs)-1
 
         ## feature matching
@@ -91,13 +91,13 @@ if __name__ == '__main__':
         print('Image matching...')
         translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
         # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
-
+        accu_y += translation_y
         ## image blending
         print('Image blending...')
         if idx == 0:
-            output = image_blending(imgs[idx], imgs[idx+1], translation_x, translation_y)
+            output = image_blending(imgs[idx], imgs[idx+1], translation_x, accu_y)
         else:
-            output = image_blending(output, imgs[idx+1], translation_x, translation_y)
+            output = image_blending(output, imgs[idx+1], translation_x, accu_y)
       
         cv2.imshow('show blending', output)
         cv2.waitKey(0)

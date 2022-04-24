@@ -19,20 +19,19 @@ def image_blending(src, tar, translation_x, translation_y, percent=0.2):
     overlap_x = tw - int(translation_x)
     blend_range_x = int(overlap_x * percent)
     tend_x, sstart_x = tw - int(overlap_x / 2), int(overlap_x / 2)
-    
     # crop image
     crop_src = False 
-    if th-abs(translation_y) > sh or th == sh:
+    if th-abs(translation_y) < sh or th == sh:
         crop_src = True
     if translation_y < 0: # shift tar up
         if crop_src:
             src = src[:int(translation_y)]
-            sh, sw, c = src.shape
+        sh, sw, c = src.shape
         tar = tar[-int(translation_y):sh-int(translation_y)]
     else:
         if crop_src:
             src = src[int(translation_y):]
-            sh, sw, c = src.shape
+        sh, sw, c = src.shape
         tar = tar[sh-int(translation_y):-int(translation_y)]
 
     # shift
