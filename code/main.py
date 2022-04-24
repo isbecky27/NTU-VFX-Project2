@@ -8,6 +8,7 @@ import argparse
 import cv2
 import os
 import re
+import math
 
 def read_imgs_and_focals(path, filename):
     '''
@@ -75,6 +76,10 @@ if __name__ == '__main__':
         # np.save(f'{i}_descriptor.npy', descriptors)
 
     output, accu_y = None, 0
+    matches = feature_matching(descriptors[len(imgs)-1], descriptors[0])
+    _, total_y, _ = RANSAC_matches(keypts[len(imgs)-1], keypts[0], matches)
+    print(total_y)
+    distribute_y = -math.ceil(total_y / (len(imgs)-1))
     for idx in range(len(imgs)-1): # len(imgs)-1
 
         ## feature matching
@@ -91,7 +96,7 @@ if __name__ == '__main__':
         print('Image matching...')
         translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
         # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
-        accu_y += translation_y
+        accu_y += int(translation_y + distribute_y + 1)
         ## image blending
         print('Image blending...')
         if idx == 0:
@@ -102,6 +107,6 @@ if __name__ == '__main__':
         cv2.imshow('show blending', output)
         cv2.waitKey(0)
 
-    # cv2.imwrite(save_path + 'linear.png', output)
+    cv2.imwrite(save_path + 'linear_3.png', output)
     cv2.imshow('Result', output[10:output.shape[0]-15])
     cv2.waitKey(0)
