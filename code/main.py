@@ -62,8 +62,7 @@ if __name__ == '__main__':
     # for img in imgs:
     for img, focal in zip(imgs, focals):
 
-        if i > 3: break
-        i += 1
+       
 
         ## use Harris Corner Detector to get keypoints
         print('Feature detection...')
@@ -78,7 +77,7 @@ if __name__ == '__main__':
         # np.save(f'{i}_descriptor.npy', descriptors)
 
     output = None
-    for idx in range(3): # len(imgs)-1
+    for idx in range(len(imgs)-1): # len(imgs)-1
 
         ## feature matching
         print('Feature matching...')
@@ -100,8 +99,9 @@ if __name__ == '__main__':
         TODO
         '''
         if idx == 0:
-            output = np.hstack((imgs[idx+1][:, :int(translation_x)], imgs[idx]))
+            output = image_blending(imgs[idx], imgs[idx+1], translation_x, translation_y)
         else:
-            output = np.hstack((imgs[idx+1][:, :int(translation_x)], output))
+            output = image_blending(output, imgs[idx+1], translation_x, translation_y)
+      
         cv2.imshow('show blending', output)
         cv2.waitKey(0)
