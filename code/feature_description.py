@@ -29,25 +29,21 @@ def compute_descriptor(m, theta, bins = 8):
     theta = theta // (360. / bins)
     
     ## calculate weighted gradient magnitude by 2D gaussian kernel
-    '''
-    need to modify
-    '''
-    weight = np.zeros(m.shape, dtype = 'float32')
-    weight[3:5, 3:5] = 1
-    gaussian_weigth = cv2.GaussianBlur(weight, (3, 3), 0)
-    weighted_gradient = m * gaussian_weigth
-    # gaussian_weigth = cv2.GaussianBlur(m, (9, 9), 0)
-    # print(m[0:4, 0:4])
-    # print('gaussian\n', gaussian_weigth)
-    # print('gaussian * m\n', weighted_gradient[0:4, 0:4])
-    # print(gaussian_weigth[0:4, 0:4])
+    gaussian_weigth = cv2.GaussianBlur(m, (9, 9), 0)
     
     histogram = []
     for i in range(0, 16, 4):
         for j in range(0, 16, 4):
-            histogram += compute_subpatch_descriptor(m[i:i+4, j:j+4], theta[i:i+4, j:j+4])
+            histogram += compute_subpatch_descriptor(gaussian_weigth[i:i+4, j:j+4], theta[i:i+4, j:j+4])
 
-    return histogram
+    # normalize
+    histogram_norm = [i / sum(histogram) for i in histogram]
+    # clip values larger than 0.2
+    histogram_norm = np.clip(histogram_norm, min(histogram_norm), 0.2)
+    # renormalize
+    histogram_norm = [i / sum(histogram) for i in histogram]
+
+    return histogram_norm
     
 def SIFT_descriptor(img, keypoints):
 
