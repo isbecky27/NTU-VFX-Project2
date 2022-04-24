@@ -38,7 +38,7 @@ if __name__ == '__main__':
     ## add argument
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type = str, default = '../data/parrington/', help = 'Path to the directory that contains series of images.')
-    parser.add_argument('--result_path', type = str, default = '../result/', help = 'Path to the directory that stores all of results.')
+    parser.add_argument('--result_path', type = str, default = '../result/parrington/', help = 'Path to the directory that stores all of results.')
     # parser.add_argument('--series_of_images', type = str, default = 'parrington', help = 'The folder of a series of images that contains images and shutter time file.')
     parser.add_argument('--focal_length_filename', type = str, default = 'pano.txt', help = 'The name of the file where shutter time information is stored.')
     args = parser.parse_args()
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         # np.save(f'{i}_keypoint.npy', keypts)
         # np.save(f'{i}_descriptor.npy', descriptors)
 
-    output, accu_y = None, 0
+    output = None
     for idx in range(len(imgs)-1): # len(imgs)-1
 
         ## feature matching
@@ -90,21 +90,18 @@ if __name__ == '__main__':
         ## image matching
         print('Image matching...')
         translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
-        accu_y += translation_y
         # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
 
         ## image blending
-        '''
-        TODO
-        '''
+        print('Image blending...')
         if idx == 0:
-            output = image_blending(imgs[idx], imgs[idx+1], translation_x, accu_y)
+            output = image_blending(imgs[idx], imgs[idx+1], translation_x, translation_y)
         else:
-            output = image_blending(output, imgs[idx+1], translation_x, accu_y)
+            output = image_blending(output, imgs[idx+1], translation_x, translation_y)
       
         cv2.imshow('show blending', output)
         cv2.waitKey(0)
 
-    # cv2.imwrite(save_path + 'stack.png', output[10:output.shape[0]-15])
+    # cv2.imwrite(save_path + 'linear.png', output)
     cv2.imshow('Result', output[10:output.shape[0]-15])
     cv2.waitKey(0)
