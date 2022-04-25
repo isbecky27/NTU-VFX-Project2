@@ -14,11 +14,11 @@
 hw2_[13]
  ├─ code 
  ├─ data  
- │   ├─grail
- │   └─parrington                            
- └─ results         
-     ├─grail
-     └─parrington         
+ │   ├─ grail
+ │   └─ parrington                            
+ └─ result        
+     ├─ grail
+     └─ parrington         
 ```
 
 ### Run Code
