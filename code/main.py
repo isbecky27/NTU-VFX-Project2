@@ -25,9 +25,10 @@ def read_imgs_and_focals(path, filename):
 
     imgs, focals = [], []
     for line in content:
-        if '.jpg' in line:
-            imgfile = re.findall(r"[a-z0-9]*.jpg", line)
+        if '.JPG' in line:
+            imgfile = re.findall(r"[a-z0-9]*.JPG", line)
             img = cv2.imread(os.path.join(path, imgfile[0]))
+            img = cv2.resize(img, (504, 672))
             imgs.append(img)
         elif len(line.split()) == 1:
             focals.append(float(re.findall(r'\d+\.\d+', line)[0]))

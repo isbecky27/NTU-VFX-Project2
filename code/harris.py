@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import cv2
 
-def compute_R(img, ksize = 7, s = 5, k = 0.04):
+def compute_R(img, ksize = 3, s = 5, k = 0.04):
     '''
         compute R for each image
     '''

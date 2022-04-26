@@ -18,7 +18,7 @@ def draw_matches(img1, img2, des1, des2, matches, i = 0):
     plt.show()
 
 def feature_matching(des1, des2, threshold = 0.6):
-
+    
     distances = cdist(des1, des2)
     sorted_index = np.argsort(distances, axis = 1)
     
@@ -29,10 +29,13 @@ def feature_matching(des1, des2, threshold = 0.6):
         if first / second < threshold:
             matches.append([i, idx[0]])
 
+    if len(matches) <= 0:
+        matches = feature_matching(des1, des2, threshold + 0.05)
+
     return matches
 
-def RANSAC_matches(kp1, kp2, matches, iteration = 10):
-
+def RANSAC_matches(kp1, kp2, matches, iteration = 20):
+    
     kp1, kp2, matches = np.array(kp1), np.array(kp2), np.array(matches) 
     idx1, idx2 = matches[:, 0], matches[:, 1]
 
@@ -53,7 +56,7 @@ def RANSAC_matches(kp1, kp2, matches, iteration = 10):
     translation = kp1[idx1] - kp2[idx2]
     mean_translation = np.mean(translation[good_matches_idx], axis = 0)
     translation_y, translation_x = mean_translation[0], mean_translation[1]
-
+    
     return abs(round(translation_x)), round(translation_y), good_matches
   
 # img0 = np.load('0_blur.npy')
