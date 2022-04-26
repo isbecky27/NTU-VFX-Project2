@@ -4,25 +4,20 @@ import numpy as np
 import random
 import cv2
 
-def plot_matches(im1, im2, des1, des2, matches, i = 0):
-    h1, w1, c = im1.shape
-    h2, w2, c = im2.shape
-    vis = np.zeros([max(h1, h2), w1 + w2, c], dtype=np.uint8) + 255
-    vis[:h1, :w1] = im1
-    vis[:h2, w1:] = im2
+def draw_matches(img1, img2, des1, des2, matches, i = 0):
 
-    fig, ax = plt.subplots(1, 1, figsize=(15, 15))
-    ax.imshow(vis)
+    matching_img = np.hstack((img1, img2))
 
-    for (idx1, idx2) in matches:
+    for idx1, idx2 in matches:
         y1, x1 = des1[idx1]
         y2, x2 = des2[idx2]
-        ax.plot([x1, w1 + x2], [y1, y2], marker = 'o', linewidth = 1, markersize = 4)
+        plt.plot([x1, img1.shape[1] + x2], [y1, y2], marker = 'o', linewidth = 1, markersize = 3)
     
-    # plt.savefig('matches-%d.png' % i)
+    # plt.savefig(f'matches-{i}.png')
+    plt.imshow(cv2.cvtColor(matching_img, cv2.COLOR_BGR2RGB))
     plt.show()
 
-def feature_matching(des1, des2, threshold = 0.8):
+def feature_matching(des1, des2, threshold = 0.6):
 
     distances = cdist(des1, des2)
     sorted_index = np.argsort(distances, axis = 1)

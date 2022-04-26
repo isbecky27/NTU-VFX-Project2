@@ -38,15 +38,15 @@ if __name__ == '__main__':
 
     ## add argument
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type = str, default = '../data/parrington/', help = 'Path to the directory that contains series of images.')
-    parser.add_argument('--result_path', type = str, default = '../result/parrington/', help = 'Path to the directory that stores all of results.')
-    # parser.add_argument('--series_of_images', type = str, default = 'parrington', help = 'The folder of a series of images that contains images and shutter time file.')
-    parser.add_argument('--focal_length_filename', type = str, default = 'pano.txt', help = 'The name of the file where shutter time information is stored.')
+    parser.add_argument('--data_path', type = str, default = '../data/', help = 'Path to the directory that contains series of images.')
+    parser.add_argument('--result_path', type = str, default = '../result/', help = 'Path to the directory that stores all of results.')
+    parser.add_argument('--series_of_images', type = str, default = 'parrington', help = 'The folder of a series of images that contains images and focal length file.')
+    parser.add_argument('--focal_length_filename', type = str, default = 'pano.txt', help = 'The name of the file where focal length information is stored.')
     args = parser.parse_args()
 
     ## variables
-    path = args.data_path
-    save_path = args.result_path
+    path = os.path.join(args.data_path, args.series_of_images, "")
+    save_path = os.path.join(args.result_path, args.series_of_images, "")
     filename = args.focal_length_filename
     os.makedirs(os.path.dirname(save_path), exist_ok = True)
 
@@ -58,55 +58,53 @@ if __name__ == '__main__':
     print('Cylindrical Warping...')
     imgs = [cylindrical_warping(img, focal) for img, focal in zip(imgs, focals)]
 
-    i = 0
+    print('Feature detection and Feature descriptor...')
     keypts, descriptors = [], []
-    # for img in imgs:
-    for img, focal in zip(imgs, focals):
-
+    for img in imgs:
+        
         ## use Harris Corner Detector to get keypoints
-        print('Feature detection...')
         keypoints, blur_img = harris_corner_detector(img)
 
         ## feature descriptor using SIFT
-        print('Feature descriptor...')
         kp, des = SIFT_descriptor(blur_img, keypoints)
         keypts.append(kp)
         descriptors.append(des)
         # np.save(f'{i}_keypoint.npy', keypts)
         # np.save(f'{i}_descriptor.npy', descriptors)
-
-    output, accu_y = None, 0
-    matches = feature_matching(descriptors[len(imgs)-1], descriptors[0])
-    _, total_y, _ = RANSAC_matches(keypts[len(imgs)-1], keypts[0], matches)
-    print(total_y)
-    distribute_y = -math.ceil(total_y / (len(imgs)-1))
-    for idx in range(len(imgs)-1): # len(imgs)-1
-
+    
+    print('Feature matching and Image matching...')
+    trans_x, trans_y = [], []
+    for idx in range(len(imgs)-1):
+        
         ## feature matching
-        print('Feature matching...')
         matches = feature_matching(descriptors[idx], descriptors[idx+1])
-
-        # img1 = cylindrical_warping(imgs[idx], focals[idx])
-        # img2 = cylindrical_warping(imgs[idx+1], focals[idx+1])
-        # k1 = cylindrical_warping_pts(keypts[idx], focals[idx], imgs[idx].shape[0], imgs[idx].shape[1])
-        # k2 = cylindrical_warping_pts(keypts[idx+1], focals[idx+1], imgs[idx].shape[0], imgs[idx].shape[1])
-        # plot_matches(img1, img2, k1, k2, matches)
         
         ## image matching
-        print('Image matching...')
         translation_x, translation_y, good_matches = RANSAC_matches(keypts[idx], keypts[idx+1], matches)
-        # plot_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
-        accu_y += int(translation_y + distribute_y + 1)
-        ## image blending
-        print('Image blending...')
-        if idx == 0:
-            output = image_blending(imgs[idx], imgs[idx+1], translation_x, accu_y)
-        else:
-            output = image_blending(output, imgs[idx+1], translation_x, accu_y)
-      
-        cv2.imshow('show blending', output)
-        cv2.waitKey(0)
+        trans_x.append(translation_x)
+        trans_y.append(translation_y)
+        # draw_matches(imgs[idx], imgs[idx+1], keypts[idx], keypts[idx+1], good_matches)
 
-    cv2.imwrite(save_path + 'linear_3.png', output)
-    cv2.imshow('Result', output[10:output.shape[0]-15])
+    # align the first and the last image
+    matches = feature_matching(descriptors[0], descriptors[-1])
+    last_x, last_y, good_matches = RANSAC_matches(keypts[0], keypts[-1], matches)
+    accu_y = np.cumsum(trans_y)
+    dy = (translation_y - accu_y[-1]) / (len(imgs) - 1)
+
+    ## image blending
+    print('Image blending...')
+    output = None
+    for idx in range(len(imgs)-1):
+       
+        if idx == 0:
+            output = linear_blending(imgs[idx], imgs[idx+1], trans_x[idx], round(accu_y[idx] + dy * idx))
+        else:
+            output = linear_blending(output, imgs[idx+1], trans_x[idx], round(accu_y[idx] + dy * idx))
+      
+        # cv2.imshow('show blending', output)
+        # cv2.waitKey(0)
+
+    output = output[:, round(last_x / 2):]
+    # cv2.imwrite(save_path + 'linear_without_global.png', output)
+    cv2.imshow('Result', output)
     cv2.waitKey(0)
