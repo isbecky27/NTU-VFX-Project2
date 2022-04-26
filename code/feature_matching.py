@@ -7,14 +7,15 @@ import cv2
 def draw_matches(img1, img2, des1, des2, matches, i = 0):
 
     matching_img = np.hstack((img1, img2))
-
+    
+    plt.clf()
     for idx1, idx2 in matches:
         y1, x1 = des1[idx1]
         y2, x2 = des2[idx2]
         plt.plot([x1, img1.shape[1] + x2], [y1, y2], marker = 'o', linewidth = 1, markersize = 3)
     
-    # plt.savefig(f'matches-{i}.png')
     plt.imshow(cv2.cvtColor(matching_img, cv2.COLOR_BGR2RGB))
+    # plt.savefig(f'matches-{i}.png')
     plt.show()
 
 def feature_matching(des1, des2, threshold = 0.6):
@@ -40,20 +41,21 @@ def RANSAC_matches(kp1, kp2, matches, iteration = 20):
     idx1, idx2 = matches[:, 0], matches[:, 1]
 
     distances = np.linalg.norm(kp1[idx1] - kp2[idx2], axis = 1)
+    translation = kp1[idx1] - kp2[idx2]
+    translation_x = translation[:, 1]
 
     good_matches_idx = []
     for iter in range(iteration):
-        rand_dists = random.choices(distances, k = 5)
-        mean_dists = np.mean(rand_dists)
+        rand_trans_x = random.choices(translation_x, k = 5)
+        mean_trans_x = np.mean(rand_trans_x)
         
-        matches_idx = np.where(abs(distances - mean_dists) <= 3)[0]
+        matches_idx = np.where(abs(translation_x - mean_trans_x) <= 3)
         
         if len(matches_idx) > len(good_matches_idx):
             good_matches_idx = matches_idx
     
     good_matches = matches[good_matches_idx]
 
-    translation = kp1[idx1] - kp2[idx2]
     mean_translation = np.mean(translation[good_matches_idx], axis = 0)
     translation_y, translation_x = mean_translation[0], mean_translation[1]
     
