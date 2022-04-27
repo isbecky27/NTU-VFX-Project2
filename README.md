@@ -15,10 +15,14 @@ hw2_[13]
  ├─ code 
  ├─ data  
  │   ├─ grail
- │   └─ parrington                            
+ │   ├─ parrington  
+ │   ├─ road
+ │   └─ stairs
  └─ result        
      ├─ grail
-     └─ parrington         
+     ├─ parrington 
+     ├─ road
+     └─ stairs     
 ```
 
 ### Run Code
