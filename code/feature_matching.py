@@ -35,24 +35,33 @@ def feature_matching(des1, des2, threshold = 0.6):
 
     return matches
 
-def RANSAC_matches(kp1, kp2, matches, iteration = 20):
+def RANSAC_matches(kp1, kp2, matches, iteration = 10, threshold = 5):
     
     kp1, kp2, matches = np.array(kp1), np.array(kp2), np.array(matches) 
     idx1, idx2 = matches[:, 0], matches[:, 1]
+
+    num = matches.shape[0] // 3 + 1
 
     distances = np.linalg.norm(kp1[idx1] - kp2[idx2], axis = 1)
     translation = kp1[idx1] - kp2[idx2]
     translation_x = translation[:, 1]
 
     good_matches_idx = []
-    for iter in range(iteration):
+    iter = 0
+    while iter < iteration:
+
         rand_trans_x = random.choices(translation_x, k = 5)
         mean_trans_x = np.mean(rand_trans_x)
-        
-        matches_idx = np.where(abs(translation_x - mean_trans_x) <= 3)
-        
+      
+        matches_idx = np.where(abs(translation_x - mean_trans_x) <= threshold)[0]
+
         if len(matches_idx) > len(good_matches_idx):
             good_matches_idx = matches_idx
+        
+        iter += 1
+        if  iter >= iteration and len(good_matches_idx) < num:
+            threshold += 5
+            iter = 0
     
     good_matches = matches[good_matches_idx]
 
