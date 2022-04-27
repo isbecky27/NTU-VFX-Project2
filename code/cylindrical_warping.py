@@ -23,12 +23,13 @@ def cylindrical_warping(img, f):
 
 def cylindrical_warping_pts(pts, f, h, w):
 
-    x0, y0, s = w / 2, h / 2, f
+    x0, y0, s = w // 2, h // 2, f
 
     pts_warp = []
     for y, x in pts:
-        h = (y - y0) / math.sqrt((x - x0) ** 2 + f ** 2) * s
+        h = (y - y0) / math.sqrt((x - x0) ** 2 + f ** 2)
         theta = np.arctan((x - x0) / f)
-        pts_warp.append([round(y0 + h), round(x0 + s * theta)])
+        x_prime, y_prime = round(s * theta), round(s * h)
+        pts_warp.append([y0 + y_prime, x0 + x_prime])
     
     return pts_warp
