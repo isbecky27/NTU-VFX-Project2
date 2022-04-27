@@ -21,13 +21,15 @@ def draw_matches(img1, img2, des1, des2, matches, i = 0):
 def feature_matching(des1, des2, threshold = 0.6):
     
     distances = cdist(des1, des2)
-    sorted_index = np.argsort(distances, axis = 1)
+    sorted_dist_idx = np.argsort(distances, axis = 1)
     
     matches = []
-    for i, idx in enumerate(sorted_index):
-        first  = distances[i, idx[0]]
-        second = distances[i, idx[1]]
-        if first / second < threshold:
+    for i, idx in enumerate(sorted_dist_idx):
+        best_match, second_best  = distances[i, idx[0]], distances[i, idx[1]]
+
+        # if ratio is high, it could be ambiguous match.
+        ratio = best_match / second_best
+        if ratio < threshold:
             matches.append([i, idx[0]])
 
     if len(matches) <= 0:
