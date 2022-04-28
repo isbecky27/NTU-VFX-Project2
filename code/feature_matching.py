@@ -1,4 +1,4 @@
-from scipy.spatial.distance import cdist
+from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -20,7 +20,7 @@ def draw_matches(img1, img2, des1, des2, matches, i = 0):
 
 def feature_matching(des1, des2, threshold = 0.6):
     
-    distances = cdist(des1, des2)
+    distances = distance.cdist(des1, des2)
     sorted_dist_idx = np.argsort(distances, axis = 1)
     
     matches = []
